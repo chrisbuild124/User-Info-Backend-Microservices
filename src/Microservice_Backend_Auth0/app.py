@@ -43,18 +43,8 @@ def login():
     Redirects to Auth0 URL page for that specific client type
     """
     client_app = request.args.get("app-type", "invalid_entry") # URL parameters
-
-    # Redirect user to Auth0 login page
-    params = {
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "redirect_uri": CALLBACK_URL, # Must match the callback URL client
-        "scope": "openid profile email", # Tells what parameters we want back from Auth0
-        "state": client_app, # Sent directly back in callback
-        "prompt": "select_account"
-    }
-    auth_request = requests.Request("GET", AUTH_URL, params=params).prepare()
-    return redirect(auth_request.url)
+    auth_url = create_authentication_request_for_target_app(client_app)
+    return redirect(auth_url) # Redirect user to Auth0 login page
 
 @app.route("/callback")
 def callback():
@@ -98,10 +88,39 @@ def callback():
 # HELPERS
 # -----------------------------
 
+def create_authentication_request_for_target_app(client_app):
+    """
+    Sends request to Auth0 service to get the url for the user
+    """
+    params = {
+        "response_type": "code",
+        "client_id": CLIENT_ID,
+        "redirect_uri": CALLBACK_URL, # Must match the callback URL client
+        "scope": "openid profile email", # Tells what parameters we want back from Auth0
+        "state": client_app, # Sent directly back in callback
+        "prompt": "select_account"
+    }
+    auth_request = requests.Request("GET", AUTH_URL, params=params).prepare()
+    return auth_request.url
+
 def exchange_code_for_token(code):
     """
     Exchanges an authorization code for an access token
     Returns Python Dictionary
+    """
+    res = send_request_for_token_and_get_response(code)
+    if res.status_code not in (200, 201, 204):
+        return {"success": False, "error": f"Token exchange failed, status code: {res.status_code}"}
+    
+    access_token = get_access_token_from_response(res)
+    if not isinstance(access_token, str): # looks if the token isn't a string, which means it's an error json
+        return access_token
+
+    return {"success": True, "access_token": access_token}
+
+def send_request_for_token_and_get_response(code):
+    """
+    Returns response after POST with code to get the user token
     """
     data = {
         "grant_type": "authorization_code",
@@ -111,18 +130,19 @@ def exchange_code_for_token(code):
         "redirect_uri": CALLBACK_URL,
         "scope": "openid profile email"
     }
-    # Sends POST request with code for token 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    res = requests.post(TOKEN_URL, data=data, headers=headers)
-    if res.status_code not in (200, 201, 204):
-        return {"success": False, "error": f"Token exchange failed, status code: {res.status_code}"}
+    return requests.post(TOKEN_URL, data=data, headers=headers)
 
-    tokens = res.json()
+def get_access_token_from_response(response):
+    """
+    Takes response from code request for token and returns the token
+    If the token isn't in the response, returns error json
+    """
+    tokens = response.json()
     access_token = tokens.get("access_token", None)
     if not access_token:
         return {"success": False, "error": "Invalid token response from Auth0"}
-
-    return {"success": True, "access_token": access_token}
+    return access_token
 
 def exchange_token_for_user_info(access_token):
     """
