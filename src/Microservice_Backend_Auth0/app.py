@@ -43,8 +43,8 @@ def login():
     Redirects to Auth0 URL page for that specific client type
     """
     client_app = request.args.get("app-type", "invalid_entry") # URL parameters
-    auth_url = create_authentication_request_for_target_app(client_app)
-    return redirect(auth_url) # Redirect user to Auth0 login page
+    auth_request = create_authentication_request_for_target_app(client_app)
+    return redirect(auth_request.url) # Redirect user to Auth0 login page
 
 @app.route("/callback")
 def callback():
@@ -87,7 +87,7 @@ def create_authentication_request_for_target_app(client_app):
         "prompt": "select_account"
     }
     auth_request = requests.Request("GET", AUTH_URL, params=params).prepare()
-    return auth_request.url
+    return auth_request
 
 def exchange_code_for_token(code):
     """
