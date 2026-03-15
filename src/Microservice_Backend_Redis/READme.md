@@ -1,5 +1,8 @@
-# Backend Redis Microservice - Large Pool
-### CRUD operations for Docker Container
+# Backend Redis Microservice
+
+
+## NOTES
+#### CRUD operations for Docker Container
 - To create + run a docker container:
     - `docker run -p port:port redis`
         - `run` - runs a container form an image
@@ -17,19 +20,19 @@
 - To remove a stopped container:
     - `docker rm <container>`
 
-### Viewing Containers
+#### Viewing Containers
 - To view list of running containers;
     - `docker ps`
 - To lit all containers:
     - `docker ps -a`
 
-### Logs & Shell Access
+#### Logs & Shell Access
 - To view container logs:
     - `docker logs <container>`
 - Open interactive shell inside a running container:
     - `docker exec -it <container> bash`
 
-### Run a docker YML file
+#### Run a docker YML file
 - Def: Defines each service and each service is used to create a container
 - Go inside the directory and call `docker compose up -d`
     - `-d` - runs in background
@@ -43,12 +46,12 @@
     - `docker compose down`
 - Docker automatically knows the `docker-compose.yml` name by convention
 
-### docker-compose.yml file
+#### docker-compose.yml file
 - Docker fetches redis image in file by doing `image: redis:latest` which includes:
     - `redis-server`
     - `redis-ci`
 
-### docker images
+#### docker images
 - Middle between having service initialized and creating container
     - Used inside the service
 - Frozen environment that has everything to run
@@ -60,9 +63,17 @@
 - To remove docker image, do
     `docker rmi -f <image_name>`
 
-### Redis Python Module
+#### Redis Python Module
 - `redis_app = redis.Redis(host="localhost", port=REDIS_PORT, decode_responses=True)`
 
-### Docke General
+#### Access Redis database
+- `docker exec -it redis_cs361 redis-cli -a <password>`
+    - `docker exec` - runs inside docker container
+    - `-i` and `-t` - keeps stdn open, allocates a terminal
+    - `redis_cs361` - name of docker container
+    - `redis-cli` - activates redis cli
+    - `-a password` - authenticate and ask for a password
+
+#### Docker General
 - `docker exec -it <container name> redis-cli -a <password>`
 

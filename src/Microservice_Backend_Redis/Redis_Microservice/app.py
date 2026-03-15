@@ -95,7 +95,10 @@ def update_session():
     if is_session_expired(user_id):
         return jsonify({"success": False, "error": "Session expired"}), 401
 
-    # Invalidates old device if new device is signed in
+    # Checks if the user is in the latest session, sends error if not in latest session
+    if not is_user_in_latest_session(user_id, token):
+        return jsonify({"success": False, "error": "Invalid session. Please log in again."}), 401
+
     # Adds to Redis database as refreshed
     redis_app.hset(user_id, mapping={"JWT": token, "last_updated": datetime.datetime.now().isoformat()})
 
@@ -132,7 +135,7 @@ def delete_session():
     user_id = user_info.get("sub")
 
     # Check if user id exists in the REDIS database
-    if redis_app.exists(user_id):
+    if redis_app.exists(user_id) and is_user_in_latest_session(user_id, token):
         redis_app.delete(user_id)
         return jsonify({"success": True, "message": "Session deleted successfully"}), 200
     else:
@@ -183,6 +186,16 @@ def is_session_expired(user_id: str) -> bool:
     elapsed_time = (now - last_updated).total_seconds()
     return elapsed_time > TIME_UNTIL_EXPIRED
 
-# Initialize application
+def is_user_in_latest_session(user_id: str, token: str) -> bool:
+    """
+    Given the user_id exists in the database:
+    - Checks if the JWT in the database matches the JWT provided by the user
+    """
+    last_updated_JWT = redis_app.hget(user_id, "JWT")
+    if not last_updated_JWT:
+        return True
+    
+    return last_updated_JWT == token
+
 if __name__ == "__main__":
     app.run(port=PORT, debug=DEBUG_MODE)
