@@ -1,0 +1,27 @@
+services:
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql-calorie-tracker
+    restart: unless-stopped
+
+    ports:
+      - "${PORT}:3306"
+
+    volumes:
+      - ./data_calorie_tracker:/var/lib/mysql
+      - ./mysql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro  # auto-run schema on first start
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    # Ping the database to check if it's up and running
+    # Tries every 10 seconds, with a timeout of 5 seconds, 
+    # and retries up to 5 times before marking the container as unhealthy
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

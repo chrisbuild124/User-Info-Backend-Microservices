@@ -192,8 +192,6 @@ def is_user_in_latest_session(user_id: str, token: str) -> bool:
     - Checks if the JWT in the database matches the JWT provided by the user
     """
     last_updated_JWT = redis_app.hget(user_id, "JWT")
-    if not last_updated_JWT:
-        return True
     
     return last_updated_JWT == token
 

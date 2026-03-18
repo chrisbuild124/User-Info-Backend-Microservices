@@ -3,7 +3,7 @@ services:
     image: redis:latest              # Uses the latest official Redis image from internet
     container_name: redis_cs361      # Custom container name
     ports:
-      - "6379:6379"                 # Exposes Redis to host on port 6379
+      - "6379:6379"                  # Exposes Redis to host on port 6379
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     # volumes:
     #   - ./redis-cs361:/data           # Persists data on host, relative to this file's path
